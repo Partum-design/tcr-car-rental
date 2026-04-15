@@ -1,0 +1,622 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<section id="tcr-contact-page">
+    
+    <div class="contact-bg-pattern"></div>
+
+    <div class="contact-main-container">
+        
+        <div class="contact-header animate-up">
+            <span class="badge-contact">Atención 24/7</span>
+            <h2>Contáctanos <span class="highlight">Ahora</span></h2>
+            <p>Resuelve tus dudas al instante o déjanos ayudarte a elegir el auto ideal.</p>
+        </div>
+
+        <div class="contact-grid">
+            
+            <div class="info-column animate-left">
+                <div class="info-bg-image"></div> 
+                <div class="info-bg-overlay"></div>
+                
+                <div class="info-content-wrapper">
+                    
+                    <div class="info-header-mobile">
+                        <h3>Información de Contacto</h3>
+                    </div>
+
+                    <div class="info-cards-stack">
+                        
+                        <div class="info-card phone-card glass-effect">
+                            <div class="icon-box phone"><i class="fa-solid fa-phone-volume"></i></div>
+                            <div class="info-content">
+                                <h4>Llámanos</h4>
+                                <div class="links-stack">
+                                    <a href="tel:+529987773600" class="main-phone-link">998 777 3600</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-card email-card glass-effect">
+                            <div class="icon-box email"><i class="fa-solid fa-envelope-open-text"></i></div>
+                            <div class="info-content">
+                                <h4>Escríbenos</h4>
+                                <div class="links-stack">
+                                    <a href="mailto:ventas@tcrcarrental.com">ventas@tcrcarrental.com</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="https://wa.me/529987773600" target="_blank" class="whatsapp-big-btn pulse-animation">
+                            <div class="wa-content-flex">
+                                <div class="wa-icon"><i class="fa-brands fa-whatsapp"></i></div>
+                                <div class="wa-text">
+                                    <span>¿Necesitas rapidez?</span>
+                                    <h3>Chat WhatsApp</h3>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-arrow-right arrow-wa"></i>
+                        </a>
+
+                    </div>
+                    
+                    <div class="location-mini glass-effect">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <span>Cancún, Av. Colosio Km 17.5</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content-column animate-right">
+                <div class="interaction-card">
+                    
+                    <div class="interaction-tabs">
+                        <button class="tab-btn active" data-tab="form">
+                            <i class="fa-solid fa-paper-plane"></i> Enviar Mensaje
+                        </button>
+                        <button class="tab-btn" data-tab="quiz">
+                            <i class="fa-solid fa-magic-wand-sparkles"></i> Quiz: ¿Qué auto elijo?
+                        </button>
+                    </div>
+
+                    <div class="tab-content-wrapper">
+                        
+                        <div class="tab-panel active" id="tab-form">
+                            <form class="contact-form">
+                                <div class="form-header">
+                                    <h3>Cotiza o Pregunta</h3>
+                                    <p>Te responderemos en menos de 15 minutos.</p>
+                                </div>
+                                
+                                <div class="input-row">
+                                    <div class="input-group">
+                                        <input type="text" placeholder="Nombre" required>
+                                        <i class="fa-solid fa-user input-icon"></i>
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="tel" placeholder="Teléfono" required>
+                                        <i class="fa-solid fa-phone input-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <input type="email" placeholder="Correo Electrónico" required>
+                                    <i class="fa-solid fa-envelope input-icon"></i>
+                                </div>
+                                <div class="input-group">
+                                    <textarea rows="4" placeholder="¿En qué podemos ayudarte? (Fechas, modelo de auto, dudas...)"></textarea>
+                                    <i class="fa-solid fa-comment-dots input-icon textarea-icon"></i>
+                                </div>
+                                <button type="submit" class="btn-send">
+                                    Enviar Solicitud <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="tab-panel" id="tab-quiz">
+                            <div id="quiz-container">
+                                <div id="quiz-question-1" class="quiz-step active">
+                                    <div class="quiz-progress"><div class="bar" style="width: 33%"></div></div>
+                                    <h4><i class="fa-solid fa-users"></i> ¿Cuántos viajan?</h4>
+                                    <div class="quiz-options-grid">
+                                        <button class="quiz-option" data-next="2" data-value="1-2">
+                                            <span class="opt-icon"><i class="fa-solid fa-user"></i></span>
+                                            <span>1 - 2</span>
+                                        </button>
+                                        <button class="quiz-option" data-next="2" data-value="3-5">
+                                            <span class="opt-icon"><i class="fa-solid fa-users"></i></span>
+                                            <span>3 - 5</span>
+                                        </button>
+                                        <button class="quiz-option" data-next="2" data-value="6+">
+                                            <span class="opt-icon"><i class="fa-solid fa-van-shuttle"></i></span>
+                                            <span>6 o más</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="quiz-question-2" class="quiz-step">
+                                    <div class="quiz-progress"><div class="bar" style="width: 66%"></div></div>
+                                    <h4><i class="fa-solid fa-map-location-dot"></i> Tipo de viaje</h4>
+                                    <div class="quiz-options-grid">
+                                        <button class="quiz-option" data-next="3" data-value="city">
+                                            <span class="opt-icon"><i class="fa-solid fa-city"></i></span>
+                                            <span>Ciudad / Relax</span>
+                                        </button>
+                                        <button class="quiz-option" data-next="3" data-value="adventure">
+                                            <span class="opt-icon"><i class="fa-solid fa-person-hiking"></i></span>
+                                            <span>Aventura / Tours</span>
+                                        </button>
+                                        <button class="quiz-option" data-next="3" data-value="business">
+                                            <span class="opt-icon"><i class="fa-solid fa-briefcase"></i></span>
+                                            <span>Negocios</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="quiz-question-3" class="quiz-step">
+                                    <div class="quiz-progress"><div class="bar" style="width: 100%"></div></div>
+                                    <h4><i class="fa-solid fa-suitcase-rolling"></i> Equipaje</h4>
+                                    <div class="quiz-options-grid">
+                                        <button class="quiz-option" data-next="result" data-value="light">
+                                            <span class="opt-icon"><i class="fa-solid fa-bag-shopping"></i></span>
+                                            <span>Poco</span>
+                                        </button>
+                                        <button class="quiz-option" data-next="result" data-value="medium">
+                                            <span class="opt-icon"><i class="fa-solid fa-suitcase"></i></span>
+                                            <span>Normal</span>
+                                        </button>
+                                        <button class="quiz-option" data-next="result" data-value="heavy">
+                                            <span class="opt-icon"><i class="fa-solid fa-boxes-packing"></i></span>
+                                            <span>Mucho</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="quiz-result" class="quiz-step result-panel">
+                                    <div class="result-icon-box">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                    <h4>¡Tenemos tu auto ideal!</h4>
+                                    <p id="recommendation-text" class="rec-text"></p>
+                                    <div class="result-actions">
+                                        <a href="/servicios" class="btn-recommend">Ver Autos <i class="fa-solid fa-arrow-right"></i></a>
+                                        <button class="btn-reset">Reiniciar <i class="fa-solid fa-rotate-right"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="map-section" class="map-wrapper animate-up delay-map">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3723.71130196559!2d-86.8503401!3d21.044234499999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8f4c2dd59968b153%3A0x7acedd44d21dd6a8!2sTCR%20Car%20Rental%20-%20Renta%20de%20autos%20sin%20Tarjeta%20de%20Credito%20en%20cancun!5e0!3m2!1ses-419!2smx!4v1768017386477!5m2!1ses-419!2smx" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+
+</section>
+
+<style>
+/* === ESTILOS PÁGINA CONTACTO PREMIUM "CHINGÓN" === */
+#tcr-contact-page * { box-sizing: border-box !important; }
+
+#tcr-contact-page {
+    /* Paleta de Colores */
+    --brand-blue: #1C9BD6 !important;
+    --brand-peach: #F2D9A0 !important;
+    --brand-coral: #FF6F5E !important;
+    --brand-dark: #222222 !important;
+    --brand-white: #FFFFFF !important;
+    --bg-light: #F4F7F9 !important; 
+    --glass-bg: rgba(255, 255, 255, 0.85) !important;
+    --glass-border: rgba(255, 255, 255, 0.5) !important;
+    
+    position: relative !important;
+    width: 100% !important;
+    padding: 100px 0 0 0 !important; /* Espacio para el header fijo */
+    background-color: var(--bg-light) !important;
+    font-family: 'Poppins', sans-serif !important;
+    display: block !important;
+}
+
+/* Eliminar subrayados globales en esta sección */
+#tcr-contact-page a { text-decoration: none !important; }
+
+/* Fondo Pattern */
+#tcr-contact-page .contact-bg-pattern {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 60% !important;
+    background: linear-gradient(135deg, #eef2f5 0%, #ffffff 100%) !important;
+    z-index: 1 !important;
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%) !important;
+}
+
+#tcr-contact-page .contact-main-container {
+    max-width: 1100px !important;
+    width: 90% !important;
+    margin: 0 auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* Header */
+#tcr-contact-page .contact-header {
+    text-align: center !important;
+    max-width: 650px !important;
+    margin: 0 auto 50px auto !important;
+}
+
+#tcr-contact-page .badge-contact {
+    display: inline-block !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    color: var(--brand-blue) !important;
+    background-color: rgba(28, 155, 214, 0.1) !important;
+    padding: 6px 14px !important;
+    border-radius: 30px !important;
+    margin-bottom: 15px !important;
+}
+
+#tcr-contact-page h2 {
+    font-size: 42px !important;
+    font-weight: 800 !important;
+    color: var(--brand-dark) !important;
+    margin-bottom: 10px !important;
+    line-height: 1.1 !important;
+}
+
+#tcr-contact-page .highlight { color: var(--brand-coral) !important; position: relative !important; }
+#tcr-contact-page .highlight::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 2px !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 8px !important;
+    background-color: rgba(255, 111, 94, 0.2) !important;
+    z-index: -1 !important;
+}
+
+/* Grid Layout */
+#tcr-contact-page .contact-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1.3fr !important;
+    gap: 30px !important;
+    margin-bottom: 80px !important;
+    align-items: stretch !important;
+}
+
+/* === COLUMNA IZQUIERDA (INFO & IMAGEN) === */
+#tcr-contact-page .info-column {
+    position: relative !important;
+    border-radius: 24px !important;
+    overflow: hidden !important;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15) !important;
+    min-height: 600px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#tcr-contact-page .info-bg-image {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    /* Imagen de auto/carretera bonita */
+    background-image: url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=800') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    z-index: 1 !important;
+    transition: transform 10s ease !important;
+}
+#tcr-contact-page .info-column:hover .info-bg-image { transform: scale(1.1) !important; }
+
+#tcr-contact-page .info-bg-overlay {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(to bottom, rgba(28, 155, 214, 0.3), rgba(0,0,0,0.7)) !important;
+    z-index: 2 !important;
+}
+
+#tcr-contact-page .info-content-wrapper {
+    position: relative !important;
+    z-index: 3 !important;
+    padding: 40px 30px !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+}
+
+#tcr-contact-page .info-cards-stack { display: flex !important; flex-direction: column !important; gap: 20px !important; margin-top: auto !important; margin-bottom: 20px !important; }
+
+/* Tarjetas con efecto Glass */
+#tcr-contact-page .glass-effect {
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    padding: 15px 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    transition: transform 0.3s, background 0.3s !important;
+}
+#tcr-contact-page .glass-effect:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    transform: translateX(5px) !important;
+}
+
+#tcr-contact-page .icon-box {
+    width: 42px !important; height: 42px !important; border-radius: 12px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 18px !important; flex-shrink: 0 !important;
+    color: white !important;
+}
+#tcr-contact-page .phone { background: var(--brand-blue) !important; box-shadow: 0 4px 10px rgba(28, 155, 214, 0.4) !important; }
+#tcr-contact-page .email { background: var(--brand-coral) !important; box-shadow: 0 4px 10px rgba(255, 111, 94, 0.4) !important; }
+
+#tcr-contact-page .info-content h4 { margin: 0 0 2px 0 !important; font-size: 13px !important; color: rgba(255,255,255,0.8) !important; font-weight: 500 !important; text-transform: uppercase !important; }
+#tcr-contact-page .links-stack a { color: white !important; font-size: 16px !important; font-weight: 700 !important; text-decoration: none !important; display: block !important; }
+#tcr-contact-page .links-stack a:hover { color: var(--brand-peach) !important; }
+
+/* Botón WhatsApp Gigante */
+#tcr-contact-page .whatsapp-big-btn {
+    background: linear-gradient(135deg, #25D366, #128C7E) !important;
+    border-radius: 18px !important;
+    padding: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    color: white !important;
+    text-decoration: none !important;
+    box-shadow: 0 10px 30px rgba(37, 211, 102, 0.3) !important;
+    transition: all 0.3s !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+}
+#tcr-contact-page .whatsapp-big-btn:hover { transform: translateY(-3px) scale(1.02) !important; box-shadow: 0 15px 40px rgba(37, 211, 102, 0.5) !important; }
+
+#tcr-contact-page .wa-content-flex { display: flex !important; align-items: center !important; gap: 15px !important; }
+#tcr-contact-page .wa-icon { font-size: 32px !important; }
+#tcr-contact-page .wa-text span { font-size: 12px !important; opacity: 0.9 !important; display: block !important; font-weight: 500 !important; }
+#tcr-contact-page .wa-text h3 { margin: 0 !important; font-size: 20px !important; font-weight: 800 !important; line-height: 1 !important; }
+#tcr-contact-page .arrow-wa { font-size: 18px !important; opacity: 0.8 !important; }
+
+#tcr-contact-page .location-mini { font-size: 13px !important; color: white !important; font-weight: 500 !important; justify-content: center !important; padding: 10px !important; background: rgba(0,0,0,0.3) !important; border: none !important; }
+
+/* === COLUMNA DERECHA (INTERACCIÓN) === */
+#tcr-contact-page .interaction-card {
+    background: var(--brand-white) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08) !important;
+    overflow: hidden !important;
+    height: 100% !important;
+}
+
+/* Tabs Estilo Pill */
+#tcr-contact-page .interaction-tabs {
+    background-color: #f0f4f8 !important;
+    padding: 8px !important;
+    display: flex !important;
+    gap: 8px !important;
+    margin: 20px 20px 0 20px !important;
+    border-radius: 16px !important;
+}
+
+#tcr-contact-page .tab-btn {
+    flex: 1 !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    color: #888 !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+    font-size: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
+
+#tcr-contact-page .tab-btn.active {
+    background-color: var(--brand-white) !important;
+    color: var(--brand-blue) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+}
+
+#tcr-contact-page .tab-content-wrapper { padding: 30px !important; }
+#tcr-contact-page .tab-panel { display: none !important; animation: fadeIn 0.4s ease-out !important; }
+#tcr-contact-page .tab-panel.active { display: block !important; }
+
+/* Formulario */
+#tcr-contact-page .form-header { margin-bottom: 25px !important; text-align: center !important; }
+#tcr-contact-page .form-header h3 { font-size: 22px !important; margin: 0 0 5px 0 !important; color: var(--brand-dark) !important; }
+#tcr-contact-page .form-header p { font-size: 14px !important; color: #888 !important; margin: 0 !important; }
+
+#tcr-contact-page .input-row { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 15px !important; margin-bottom: 15px !important; }
+#tcr-contact-page .input-group { position: relative !important; margin-bottom: 15px !important; }
+
+#tcr-contact-page input, #tcr-contact-page textarea {
+    width: 100% !important;
+    padding: 15px 15px 15px 45px !important;
+    border: 2px solid #eee !important;
+    border-radius: 12px !important;
+    background-color: #fbfbfb !important;
+    font-family: inherit !important;
+    font-size: 14px !important;
+    transition: all 0.3s !important;
+    color: var(--brand-dark) !important;
+}
+#tcr-contact-page input:focus, #tcr-contact-page textarea:focus {
+    border-color: var(--brand-blue) !important;
+    background-color: #fff !important;
+    outline: none !important;
+    box-shadow: 0 0 0 4px rgba(28, 155, 214, 0.1) !important;
+}
+
+#tcr-contact-page .input-icon {
+    position: absolute !important;
+    left: 18px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #bbb !important;
+    font-size: 16px !important;
+    pointer-events: none !important;
+    transition: color 0.3s !important;
+}
+#tcr-contact-page .textarea-icon { top: 20px !important; transform: none !important; }
+#tcr-contact-page input:focus + .input-icon, 
+#tcr-contact-page textarea:focus + .input-icon { color: var(--brand-blue) !important; }
+
+#tcr-contact-page .btn-send {
+    width: 100% !important;
+    padding: 16px !important;
+    background: linear-gradient(90deg, var(--brand-blue), #158bc2) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    box-shadow: 0 8px 20px rgba(28, 155, 214, 0.3) !important;
+}
+#tcr-contact-page .btn-send:hover { transform: translateY(-2px) !important; box-shadow: 0 12px 25px rgba(28, 155, 214, 0.4) !important; }
+
+/* Quiz Styles */
+#tcr-contact-page .quiz-step { display: none !important; text-align: center !important; }
+#tcr-contact-page .quiz-step.active { display: block !important; animation: slideInRight 0.4s ease !important; }
+
+#tcr-contact-page .quiz-progress { background: #eee !important; height: 6px !important; border-radius: 10px !important; margin-bottom: 25px !important; overflow: hidden !important; }
+#tcr-contact-page .quiz-progress .bar { height: 100% !important; background: var(--brand-peach) !important; border-radius: 10px !important; transition: width 0.5s !important; }
+
+#tcr-contact-page .quiz-step h4 { margin-bottom: 25px !important; color: var(--brand-dark) !important; font-size: 18px !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 10px !important; }
+#tcr-contact-page .quiz-step h4 i { color: var(--brand-coral) !important; }
+
+#tcr-contact-page .quiz-options-grid { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 12px !important; }
+
+#tcr-contact-page .quiz-option {
+    background: white !important;
+    border: 2px solid #f0f0f0 !important;
+    border-radius: 16px !important;
+    padding: 20px 10px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+#tcr-contact-page .opt-icon {
+    width: 50px !important; height: 50px !important; background: #f9f9f9 !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 20px !important; color: #888 !important; transition: all 0.2s !important;
+}
+#tcr-contact-page .quiz-option:hover { border-color: var(--brand-blue) !important; transform: translateY(-5px) !important; box-shadow: 0 8px 20px rgba(0,0,0,0.05) !important; }
+#tcr-contact-page .quiz-option:hover .opt-icon { background: var(--brand-blue) !important; color: white !important; }
+#tcr-contact-page .quiz-option span:last-child { font-size: 13px !important; font-weight: 600 !important; color: #555 !important; }
+
+/* Quiz Result */
+#tcr-contact-page .result-icon-box { width: 80px !important; height: 80px !important; background: #E8F5E9 !important; color: #4CAF50 !important; font-size: 36px !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 auto 20px auto !important; }
+#tcr-contact-page .rec-text { background: #f9f9f9 !important; padding: 20px !important; border-radius: 12px !important; border-left: 4px solid var(--brand-peach) !important; margin-bottom: 25px !important; font-size: 15px !important; line-height: 1.6 !important; }
+#tcr-contact-page .result-actions { display: flex !important; flex-direction: column !important; gap: 10px !important; }
+#tcr-contact-page .btn-recommend { display: block !important; padding: 15px !important; background: var(--brand-dark) !important; color: white !important; text-align: center !important; border-radius: 10px !important; font-weight: 600 !important; }
+#tcr-contact-page .btn-reset { background: none !important; border: none !important; color: #999 !important; cursor: pointer !important; padding: 10px !important; font-size: 13px !important; }
+
+/* Mapa */
+#tcr-contact-page .map-wrapper { line-height: 0 !important; margin-top: 0 !important; border-top: 5px solid var(--brand-blue) !important; }
+
+/* Animaciones */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes pulse-btn { 0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); } }
+#tcr-contact-page .pulse-animation { animation: pulse-btn 2s infinite !important; }
+
+/* Responsive */
+@media (max-width: 992px) {
+    #tcr-contact-page .contact-grid { grid-template-columns: 1fr !important; }
+    #tcr-contact-page .info-column { order: -1 !important; min-height: 400px !important; }
+    #tcr-contact-page .info-bg-image { background-attachment: scroll !important; }
+}
+@media (max-width: 600px) {
+    #tcr-contact-page .input-row { grid-template-columns: 1fr !important; }
+    #tcr-contact-page .quiz-options-grid { grid-template-columns: 1fr !important; }
+    #tcr-contact-page .quiz-option { flex-direction: row !important; padding: 15px !important; }
+    #tcr-contact-page h2 { font-size: 32px !important; }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // === LÓGICA TABS ===
+    const root = document.getElementById('tcr-contact-page');
+    const tabs = root.querySelectorAll('.tab-btn');
+    const panels = root.querySelectorAll('.tab-panel');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.getAttribute('data-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            panels.forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            root.querySelector(`#tab-${target}`).classList.add('active');
+        });
+    });
+
+    // === LÓGICA QUIZ ===
+    const quizResult = {};
+    const recText = root.querySelector('#recommendation-text');
+    
+    function showQuizStep(id) {
+        root.querySelectorAll('.quiz-step').forEach(s => s.classList.remove('active'));
+        root.querySelector(`#${id}`).classList.add('active');
+    }
+
+    function calculateRec() {
+        // Lógica simple de recomendación
+        const size = quizResult['1'];
+        const type = quizResult['2'];
+        let msg = "";
+
+        if(size === '6+') {
+            msg = "Para grupos grandes, la <strong>Toyota Hiace (Van)</strong> es tu mejor opción. Espacio de sobra para todos.";
+        } else if(type === 'adventure' || size === '3-5') {
+            msg = "Te recomendamos una <strong>SUV (Creta o Tracker)</strong>. Perfecta para carretera y con buena altura para tours.";
+        } else {
+            msg = "Un <strong>Auto Compacto (March o Aveo)</strong> es ideal para ti. Económico, fácil de estacionar y perfecto para la ciudad.";
+        }
+        recText.innerHTML = msg;
+        showQuizStep('quiz-result');
+    }
+
+    root.querySelectorAll('.quiz-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const current = btn.closest('.quiz-step').id.split('-').pop();
+            const next = btn.getAttribute('data-next');
+            quizResult[current] = btn.getAttribute('data-value');
+
+            if(next === 'result') calculateRec();
+            else showQuizStep(`quiz-question-${next}`);
+        });
+    });
+
+    root.querySelector('.btn-reset').addEventListener('click', () => {
+        showQuizStep('quiz-question-1');
+    });
+});
+</script>
