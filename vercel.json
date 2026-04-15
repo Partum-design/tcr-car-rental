@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "trailingSlash": true,
+  "cleanUrls": false,
+  "rewrites": [
+    {
+      "source": "/submit-reservation.php",
+      "destination": "/api/submit-reservation"
+    }
+  ]
+}

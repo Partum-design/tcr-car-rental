@@ -1,41 +1,26 @@
-# TCR Standalone (HTML/CSS/JS/PHP)
+# TCR Car Rental (Vercel Static)
 
-Migración del backup WordPress a una versión standalone usando:
+Sitio migrado a formato compatible con Vercel:
 
-- `HTML/CSS/JS` para frontend.
-- `PHP` para el flujo de reservación/cotización.
-- El plugin original `tcr-reservas` reutilizado desde `includes/tcr-reservas.php` con un shim de funciones WordPress.
+- Páginas estáticas HTML (`index.html` por ruta).
+- Assets en `wp-content/uploads`.
+- Endpoint serverless en `api/submit-reservation.js` para procesar el formulario y redirigir a `/gracias-reservacion/`.
 
 ## Estructura
 
-- `index.php` -> Inicio
-- `servicios/index.php`
-- `contacto/index.php`
-- `reservacion-prueba/index.php`
-- `gracias-reservacion/index.php`
-- `submit-reservation.php` -> handler POST del formulario
-- `includes/wp-shim.php` -> compatibilidad WP mínima
-- `includes/bootstrap-plugin.php` -> carga del plugin
-- `includes/site.php` -> render de páginas/fragments
-- `includes/fragments/*.html` -> contenido reconstruido desde Elementor
-- `wp-content/uploads` -> junction al backup original
+- `index.html`
+- `servicios/index.html`
+- `contacto/index.html`
+- `reservacion-prueba/index.html`
+- `gracias-reservacion/index.html`
+- `api/submit-reservation.js`
+- `vercel.json`
 
-## Ejecutar local
+## Deploy
 
-1. Instala PHP 8.x con `mail()` habilitado.
-2. Desde esta carpeta:
+Este proyecto está listo para deploy directo en Vercel desde GitHub.
 
-```bash
-php -S localhost:8080
-```
+## Nota formulario
 
-3. Abre:
-
-- `http://localhost:8080/`
-
-## Ajustes recomendados
-
-- Datos de marca, WhatsApp y correos internos están en:
-  - `includes/tcr-reservas.php` (funciones `tcr_whatsapp_number()`, `tcr_mail_from_email()`, `tcr_internal_emails()`).
-- Si cambias dominio/rutas de uploads, actualiza:
-  - `includes/wp-shim.php` (`tcr_localize_url`).
+El flujo del formulario funciona en frontend y el submit redirige correctamente a la página de gracias.
+Si deseas envío real por correo/CRM, se integra en `api/submit-reservation.js` con credenciales del proveedor.
