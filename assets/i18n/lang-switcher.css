@@ -7,6 +7,9 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 
 #tcr-lang-switcher .tcr-lang-btn{

@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/Partum-design/tcr-car-rental#readme",
   "dependencies": {
-    "cheerio": "^1.2.0"
+    "cheerio": "^1.2.0",
+    "nodemailer": "^8.0.5"
   }
 }
