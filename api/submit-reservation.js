@@ -26,7 +26,6 @@ const RESERVATION_RECIPIENTS = [
 ];
 
 const SITE_URL = (process.env.TCR_SITE_URL || 'https://tcrcarrental.com').replace(/\/$/, '');
-const EMAIL_LOGO_URL = process.env.TCR_EMAIL_LOGO_URL || `${SITE_URL}/wp-content/uploads/2025/11/imgi_16_logo.png`;
 const WHATSAPP_URL = 'https://wa.me/529987773600';
 const CAR_CATALOG = loadCarCatalog();
 
@@ -118,7 +117,7 @@ async function sendReservationEmails(reservation) {
   const { transporter, senderUser } = await createWorkingTransporter();
   const fullName = `${reservation.firstName} ${reservation.lastName}`.trim() || 'Cliente sin nombre';
 
-  const adminSubject = `Nueva reservación TCR #${reservation.reservationId} - ${fullName}`;
+  const adminSubject = `[TCR Rental] CONFIRMACION TCR #${reservation.reservationId} - ${fullName}`;
   const adminHtml = buildAdminHtmlEmail(reservation);
   const adminText = buildAdminTextEmail(reservation);
 
@@ -131,7 +130,7 @@ async function sendReservationEmails(reservation) {
     html: adminHtml
   });
 
-  const clientSubject = `Confirmación de solicitud de reservación #${reservation.reservationId} - TCR Car Rental`;
+  const clientSubject = `[TCR Rental] CONFIRMACION TCR #${reservation.reservationId}`;
   const clientHtml = buildClientHtmlEmail(reservation);
   const clientText = buildClientTextEmail(reservation);
 
@@ -174,8 +173,9 @@ async function createWorkingTransporter() {
 }
 
 function buildAdminTextEmail(r) {
+  const pricing = buildPricingSummary(r);
   const lines = [
-    `Nueva reservación recibida - #${r.reservationId}`,
+    `CONFIRMACION TCR - #${r.reservationId}`,
     `Fecha: ${r.submittedAt}`,
     '',
     'DATOS DEL CLIENTE',
@@ -200,23 +200,48 @@ function buildAdminTextEmail(r) {
     `No. vuelo: ${r.flightNumber || 'No especificado'}`,
     `Conexión: ${r.connection}`,
     `Extras: ${r.extras.length ? r.extras.join(', ') : 'Ninguno'}`,
-    `Comentarios: ${r.comments || 'Sin comentarios'}`
+    '',
+    'SU RENTA INCLUYE',
+    '- Seguro de colisión y robo con deducible del 10%',
+    '- Kilometraje libre',
+    '- Seguro de responsabilidad civil',
+    '- Impuestos federales',
+    '- Impuestos aeroportuarios',
+    '- Seguro de gastos médicos',
+    '- Asistencia legal',
+    '- Transporte gratuito Aeropuerto <-> Oficina',
+    '',
+    `Comentarios: ${r.comments || 'Sin comentarios'}`,
+    '',
+    'CONCEPTO / IMPORTE',
+    pricing.rows.map((row) => `- ${row.label}: ${row.amount}`).join('\n'),
+    `Total estimado: ${pricing.total}`
   ];
 
   return lines.join('\n');
 }
 
 function buildClientTextEmail(r) {
+  const pricing = buildPricingSummary(r);
   return [
     `Hola ${`${r.firstName} ${r.lastName}`.trim() || 'Cliente'},`,
     '',
-    'Recibimos tu solicitud de reservación en TCR Car Rental.',
-    `Folio: #${r.reservationId}`,
+    'CONFIRMACION TCR',
+    `Folio de reservación: #${r.reservationId}`,
+    '',
+    'Recibimos tu solicitud de reservación en TCR Car Rental. En un máximo de 24 horas te enviaremos confirmación final y link de pago.',
+    '',
     `Vehículo: ${r.car || 'No especificado'}`,
     `Entrega: ${r.pickupLocation || '-'} - ${r.pickupDate || '-'} ${r.pickupTime || ''}`.trim(),
     `Devolución: ${r.dropoffLocation || '-'} - ${r.dropoffDate || '-'} ${r.dropoffTime || ''}`.trim(),
+    `Pasajeros: ${r.passengers || r.carPassengers || 'No especificado'}`,
+    `Hotel: ${r.hotel || 'No especificado'}`,
+    `Extras: ${r.extras.length ? r.extras.join(', ') : 'Ninguno'}`,
+    `Comentarios: ${r.comments || 'Sin comentarios'}`,
     '',
-    'En un máximo de 24 horas te contactaremos para confirmación y link de pago.',
+    'Total estimado:',
+    pricing.total,
+    '',
     `WhatsApp directo: ${WHATSAPP_URL}`,
     '',
     'Gracias por confiar en TCR Car Rental.'
@@ -224,59 +249,102 @@ function buildClientTextEmail(r) {
 }
 
 function buildAdminHtmlEmail(r) {
+  return buildConfirmationHtml(r, false);
+}
+
+function buildClientHtmlEmail(r) {
+  return buildConfirmationHtml(r, true);
+}
+
+function buildConfirmationHtml(r, forClient) {
   const fullName = `${r.firstName} ${r.lastName}`.trim() || 'No especificado';
-  const carImage = r.carImage ? `<img src="${escapeHtml(r.carImage)}" alt="${escapeHtml(r.car)}" style="display:block;width:100%;max-width:360px;border-radius:12px;border:1px solid #333;">` : '';
+  const carImageHtml = r.carImage
+    ? `<img src="${escapeHtml(r.carImage)}" alt="${escapeHtml(r.car || 'Vehículo')}" style="display:block;width:100%;max-width:420px;margin:0 auto;border:1px solid #d8e6ff;border-radius:10px;">`
+    : `<div style="padding:22px;text-align:center;color:#6a7690;font-size:13px;">Imagen del vehículo no disponible</div>`;
+  const pricing = buildPricingSummary(r);
+  const introText = forClient
+    ? `Estimado(a) ${escapeHtml(fullName)}, recibimos su solicitud de reservación. En un periodo máximo de 24 horas nos pondremos en contacto para confirmación y envío de link de pago PayPal.`
+    : `Se recibió una nueva solicitud de reservación desde el formulario web de TCR Car Rental.`;
+
+  const conceptsHtml = pricing.rows.map((row) => conceptRow(row.label, row.amount)).join('');
+  const extrasText = r.extras.length ? r.extras.join(', ') : 'Ninguno';
 
   return `
-  <div style="margin:0;padding:0;background:#0d0f14;font-family:Arial,Helvetica,sans-serif;color:#fff;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0d0f14;padding:24px 0;">
+  <div style="margin:0;padding:0;background:#edf3ff;font-family:Arial,Helvetica,sans-serif;color:#0f1c33;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#edf3ff;padding:20px 0;">
       <tr>
         <td align="center">
-          <table role="presentation" width="680" cellspacing="0" cellpadding="0" style="width:680px;max-width:680px;background:#12151d;border:1px solid #2a2f3a;border-radius:16px;overflow:hidden;">
+          <table role="presentation" width="780" cellspacing="0" cellpadding="0" style="width:780px;max-width:780px;background:#ffffff;border:1px solid #c7d9ff;border-radius:10px;overflow:hidden;">
             <tr>
-              <td style="background:linear-gradient(90deg,#ffcd00,#f5b900);padding:20px 24px;text-align:center;">
-                <img src="${escapeHtml(EMAIL_LOGO_URL)}" alt="TCR Car Rental" style="height:54px;max-width:260px;object-fit:contain;">
+              <td style="padding:20px 24px 10px;">
+                <h1 style="margin:0;color:#0a4abf;font-size:34px;line-height:1.1;font-weight:800;">CONFIRMACION TCR</h1>
+                <p style="margin:10px 0 4px;color:#2d3f66;font-size:14px;line-height:1.55;">${introText}</p>
+                <p style="margin:0;color:#445679;font-size:13px;line-height:1.55;"><strong>Origen:</strong> TCR Car Rental<br><strong>WhatsApp:</strong> 9987773600<br><strong>Temporada aplicada:</strong> Temporada baja</p>
               </td>
             </tr>
             <tr>
-              <td style="padding:24px;">
-                <h1 style="margin:0 0 8px;font-size:26px;line-height:1.2;color:#ffffff;">Nueva reservación recibida</h1>
-                <p style="margin:0;color:#c3cad8;font-size:14px;">Folio <strong>#${escapeHtml(r.reservationId)}</strong> · ${escapeHtml(r.submittedAt)}</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:0 24px 24px;">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#0f1218;border:1px solid #2a2f3a;border-radius:12px;overflow:hidden;">
-                  <tr><td colspan="4" style="padding:10px 12px;background:#0a0c11;color:#ffcd00;font-weight:700;font-size:13px;letter-spacing:.4px;">DATOS GENERALES</td></tr>
-                  ${kvRow('Cliente', fullName, 'Idioma', r.formLanguage || 'No especificado')}
-                  ${kvRow('Correo', r.email || 'No especificado', 'Teléfono', r.phone || 'No especificado')}
+              <td style="padding:12px 24px 4px;">
+                ${sectionTitle('Datos Generales')}
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                  ${kvRow('Reservación', `#${r.reservationId}`, 'Idioma', r.formLanguage || 'Español')}
+                  ${kvRow('Cliente', fullName, 'Fecha', r.submittedAt)}
+                  ${kvRow('Teléfono', r.phone || 'No especificado', 'Email', r.email || 'No especificado')}
                   ${kvRow('Aerolínea', r.airline || 'No especificado', 'No. vuelo', r.flightNumber || 'No especificado')}
                   ${kvRow('Ciudad origen', r.originCity || 'No especificado', 'Conexión', r.connection)}
-                  ${kvRow('Hotel', r.hotel || 'No especificado', 'Extras', r.extras.length ? r.extras.join(', ') : 'Ninguno')}
+                  ${kvRow('Hotel', r.hotel || 'No especificado', 'Extras', extrasText)}
                 </table>
               </td>
             </tr>
             <tr>
-              <td style="padding:0 24px 24px;">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#0f1218;border:1px solid #2a2f3a;border-radius:12px;overflow:hidden;">
-                  <tr><td colspan="4" style="padding:10px 12px;background:#0a0c11;color:#ffcd00;font-weight:700;font-size:13px;letter-spacing:.4px;">VEHÍCULO Y FECHAS</td></tr>
-                  ${kvRow('Auto', r.car || 'No especificado', 'Pasajeros', r.passengers || r.carPassengers || 'No especificado')}
-                  ${kvRow('Entrega', `${r.pickupLocation || 'No especificado'} - ${r.pickupDate || '-'} ${r.pickupTime || ''}`.trim(), 'Devolución', `${r.dropoffLocation || 'No especificado'} - ${r.dropoffDate || '-'} ${r.dropoffTime || ''}`.trim())}
-                  ${kvRow('Tarifa baja / día', r.dailyLow || 'No disponible', 'Tarifa alta / día', r.dailyHigh || 'No disponible')}
+              <td style="padding:12px 24px 4px;">
+                ${sectionTitle('Vehículo')}
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                  ${kvRow('Auto', r.car || 'No especificado', 'No. pasajeros', r.passengers || r.carPassengers || 'No especificado')}
+                  ${kvRow('Entrega', r.pickupLocation || 'No especificado', 'Fecha / hora', `${r.pickupDate || '-'} ${r.pickupTime || ''}`.trim())}
+                  ${kvRow('Devolución', r.dropoffLocation || 'No especificado', 'Fecha / hora', `${r.dropoffDate || '-'} ${r.dropoffTime || ''}`.trim())}
+                  ${kvRow('Tarifa baja / día', r.dailyLow || 'Por confirmar', 'Tarifa alta / día', r.dailyHigh || 'Por confirmar')}
                 </table>
               </td>
             </tr>
             <tr>
-              <td style="padding:0 24px 16px;">
-                ${carImage}
+              <td style="padding:10px 24px 4px;">${carImageHtml}</td>
+            </tr>
+            <tr>
+              <td style="padding:12px 24px 4px;">
+                ${sectionTitle('Su Renta Incluye')}
+                <div style="border:1px solid #d8e6ff;border-top:none;padding:12px 14px;color:#1f2d4b;font-size:14px;line-height:1.7;">
+                  • Seguro de colisión y robo con deducible del 10%<br>
+                  • Kilometraje libre<br>
+                  • Seguro de responsabilidad civil<br>
+                  • Impuestos federales<br>
+                  • Impuestos aeroportuarios<br>
+                  • Seguro de gastos médicos<br>
+                  • Asistencia legal<br>
+                  • Transporte gratuito de Aeropuerto a oficina y de oficina a Aeropuerto
+                </div>
               </td>
             </tr>
             <tr>
-              <td style="padding:0 24px 24px;">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#0f1218;border:1px solid #2a2f3a;border-radius:12px;overflow:hidden;">
-                  <tr><td style="padding:10px 12px;background:#0a0c11;color:#ffcd00;font-weight:700;font-size:13px;letter-spacing:.4px;">COMENTARIOS</td></tr>
-                  <tr><td style="padding:12px;color:#d5dbea;font-size:14px;line-height:1.55;">${escapeHtml(r.comments || 'Sin comentarios')}</td></tr>
+              <td style="padding:12px 24px 4px;">
+                ${sectionTitle('Comentarios')}
+                <div style="border:1px solid #d8e6ff;border-top:none;padding:12px 14px;color:#1f2d4b;font-size:14px;line-height:1.6;">${escapeHtml(r.comments || 'Sin comentarios')}</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 24px 20px;">
+                ${sectionTitle('Concepto')}
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border:1px solid #d8e6ff;border-top:none;">
+                  <tr>
+                    <td style="padding:10px 12px;background:#e9f1ff;color:#0a4abf;font-size:12px;font-weight:700;border-bottom:1px solid #d8e6ff;">Concepto</td>
+                    <td style="padding:10px 12px;background:#e9f1ff;color:#0a4abf;font-size:12px;font-weight:700;border-bottom:1px solid #d8e6ff;text-align:right;">Importe</td>
+                  </tr>
+                  ${conceptsHtml}
+                  <tr>
+                    <td style="padding:12px;border-top:2px solid #b9cff8;font-weight:700;color:#0d2450;">Total estimado</td>
+                    <td style="padding:12px;border-top:2px solid #b9cff8;font-weight:800;color:#0a4abf;text-align:right;">${escapeHtml(pricing.total)}</td>
+                  </tr>
                 </table>
+                <p style="margin:10px 0 0;color:#5a6884;font-size:11px;line-height:1.5;">Nota: El total es estimado y puede ajustarse según temporada, horarios especiales o servicios extra confirmados.</p>
               </td>
             </tr>
           </table>
@@ -287,63 +355,79 @@ function buildAdminHtmlEmail(r) {
   `;
 }
 
-function buildClientHtmlEmail(r) {
-  const fullName = `${r.firstName} ${r.lastName}`.trim() || 'Cliente';
-
-  return `
-  <div style="margin:0;padding:0;background:#0d0f14;font-family:Arial,Helvetica,sans-serif;color:#fff;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0d0f14;padding:24px 0;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="680" cellspacing="0" cellpadding="0" style="width:680px;max-width:680px;background:#12151d;border:1px solid #2a2f3a;border-radius:16px;overflow:hidden;">
-            <tr>
-              <td style="background:linear-gradient(90deg,#ffcd00,#f5b900);padding:20px 24px;text-align:center;">
-                <img src="${escapeHtml(EMAIL_LOGO_URL)}" alt="TCR Car Rental" style="height:54px;max-width:260px;object-fit:contain;">
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:24px;">
-                <h1 style="margin:0 0 10px;font-size:26px;line-height:1.2;color:#ffffff;">Confirmación de solicitud</h1>
-                <p style="margin:0 0 14px;color:#c3cad8;font-size:15px;line-height:1.6;">Hola <strong>${escapeHtml(fullName)}</strong>, recibimos tu solicitud de reservación con folio <strong>#${escapeHtml(r.reservationId)}</strong>. Nuestro equipo te confirmará en máximo 24 horas con el enlace de pago.</p>
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#0f1218;border:1px solid #2a2f3a;border-radius:12px;overflow:hidden;">
-                  <tr><td colspan="2" style="padding:10px 12px;background:#0a0c11;color:#ffcd00;font-weight:700;font-size:13px;letter-spacing:.4px;">RESUMEN DE TU RESERVACIÓN</td></tr>
-                  ${summaryRow('Vehículo', r.car || 'No especificado')}
-                  ${summaryRow('Entrega', `${r.pickupLocation || 'No especificado'} - ${r.pickupDate || '-'} ${r.pickupTime || ''}`.trim())}
-                  ${summaryRow('Devolución', `${r.dropoffLocation || 'No especificado'} - ${r.dropoffDate || '-'} ${r.dropoffTime || ''}`.trim())}
-                  ${summaryRow('Pasajeros', r.passengers || r.carPassengers || 'No especificado')}
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:0 24px 24px;">
-                <a href="${WHATSAPP_URL}" style="display:inline-block;padding:12px 20px;background:#25D366;color:#0b2714;text-decoration:none;font-weight:700;border-radius:999px;font-size:14px;">WhatsApp 998 777 3600</a>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:0 24px 24px;color:#9ea7ba;font-size:12px;line-height:1.6;">Si no reconoces esta solicitud, responde este correo para reportarlo.</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </div>
-  `;
+function sectionTitle(label) {
+  return `<div style="background:#0a4abf;color:#ffffff;padding:9px 12px;font-size:14px;font-weight:700;letter-spacing:.3px;border:1px solid #0a4abf;">${escapeHtml(label)}</div>`;
 }
 
 function kvRow(k1, v1, k2, v2) {
   return `<tr>
-    <td style="padding:10px 12px;border-top:1px solid #22293a;color:#9aa6bf;font-size:12px;width:18%;">${escapeHtml(k1)}</td>
-    <td style="padding:10px 12px;border-top:1px solid #22293a;color:#ffffff;font-size:14px;width:32%;font-weight:600;">${escapeHtml(v1)}</td>
-    <td style="padding:10px 12px;border-top:1px solid #22293a;color:#9aa6bf;font-size:12px;width:18%;">${escapeHtml(k2)}</td>
-    <td style="padding:10px 12px;border-top:1px solid #22293a;color:#ffffff;font-size:14px;width:32%;font-weight:600;">${escapeHtml(v2)}</td>
+    <td style="padding:9px 10px;border:1px solid #d8e6ff;background:#f2f7ff;color:#0a4abf;font-size:12px;width:20%;font-weight:700;">${escapeHtml(k1)}</td>
+    <td style="padding:9px 10px;border:1px solid #d8e6ff;color:#14284d;font-size:13px;width:30%;font-weight:600;">${escapeHtml(v1)}</td>
+    <td style="padding:9px 10px;border:1px solid #d8e6ff;background:#f2f7ff;color:#0a4abf;font-size:12px;width:20%;font-weight:700;">${escapeHtml(k2)}</td>
+    <td style="padding:9px 10px;border:1px solid #d8e6ff;color:#14284d;font-size:13px;width:30%;font-weight:600;">${escapeHtml(v2)}</td>
   </tr>`;
 }
 
-function summaryRow(key, value) {
+function conceptRow(label, amount) {
   return `<tr>
-    <td style="padding:10px 12px;border-top:1px solid #22293a;color:#9aa6bf;font-size:12px;width:34%;">${escapeHtml(key)}</td>
-    <td style="padding:10px 12px;border-top:1px solid #22293a;color:#ffffff;font-size:14px;font-weight:600;">${escapeHtml(value)}</td>
+    <td style="padding:10px 12px;border-top:1px solid #d8e6ff;color:#1c2f56;font-size:13px;">${escapeHtml(label)}</td>
+    <td style="padding:10px 12px;border-top:1px solid #d8e6ff;color:#1c2f56;font-size:13px;text-align:right;font-weight:700;">${escapeHtml(amount)}</td>
   </tr>`;
+}
+
+function buildPricingSummary(r) {
+  const rows = [];
+  const days = calculateDays(r.pickupDate, r.dropoffDate);
+  const lowRate = parseCurrency(r.dailyLow);
+
+  if (days > 0 && lowRate > 0) {
+    rows.push({
+      label: `Auto (${days} día${days > 1 ? 's' : ''} x ${formatCurrency(lowRate)})`,
+      amount: formatCurrency(days * lowRate)
+    });
+  } else {
+    rows.push({ label: `Auto (${r.car || 'No especificado'})`, amount: 'Por confirmar' });
+  }
+
+  rows.push({ label: `Entrega (${r.pickupLocation || 'No especificado'})`, amount: 'Por confirmar' });
+  rows.push({ label: `Devolución (${r.dropoffLocation || 'No especificado'})`, amount: 'Por confirmar' });
+
+  if (r.extras && r.extras.length) {
+    r.extras.forEach((extra) => rows.push({ label: `Extra: ${extra}`, amount: 'Por confirmar' }));
+  }
+
+  const knownTotal = rows
+    .map((row) => (row.amount.startsWith('$') ? parseCurrency(row.amount) : 0))
+    .reduce((sum, value) => sum + value, 0);
+
+  return {
+    rows,
+    total: knownTotal > 0 ? `${formatCurrency(knownTotal)} MXN` : 'Por confirmar'
+  };
+}
+
+function calculateDays(startDate, endDate) {
+  if (!startDate || !endDate) return 0;
+  const s = new Date(`${startDate}T12:00:00`);
+  const e = new Date(`${endDate}T12:00:00`);
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return 0;
+  const diff = Math.ceil((e - s) / (1000 * 60 * 60 * 24));
+  return diff > 0 ? diff : 0;
+}
+
+function parseCurrency(value) {
+  if (!value) return 0;
+  const normalized = String(value).replace(/[^0-9.-]/g, '');
+  const num = Number(normalized);
+  return Number.isFinite(num) ? num : 0;
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    maximumFractionDigits: 2
+  }).format(value);
 }
 
 function loadCarCatalog() {
