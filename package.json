@@ -1,0 +1,25 @@
+{
+  "name": "site-html-php",
+  "version": "1.0.0",
+  "description": "Sitio migrado a formato compatible con Vercel:",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:i18n": "node scripts/build-i18n.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Partum-design/tcr-car-rental.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Partum-design/tcr-car-rental/issues"
+  },
+  "homepage": "https://github.com/Partum-design/tcr-car-rental#readme",
+  "dependencies": {
+    "cheerio": "^1.2.0"
+  }
+}

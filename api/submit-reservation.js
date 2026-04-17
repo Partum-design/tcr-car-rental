@@ -1,7 +1,10 @@
 module.exports = async (req, res) => {
+  const requestUrl = new URL(req.url || '/', 'http://localhost');
+  const isEnglish = requestUrl.searchParams.get('lang') === 'en';
+
   if (req.method !== 'POST') {
     res.statusCode = 302;
-    res.setHeader('Location', '/');
+    res.setHeader('Location', isEnglish ? '/en/' : '/');
     res.end();
     return;
   }
@@ -18,7 +21,10 @@ module.exports = async (req, res) => {
 
     if (!email || !car || !pickupDate || !dropoffDate) {
       res.statusCode = 302;
-      res.setHeader('Location', '/reservacion-prueba/?error=missing-data');
+      res.setHeader(
+        'Location',
+        isEnglish ? '/en/reservacion-prueba/?error=missing-data' : '/reservacion-prueba/?error=missing-data'
+      );
       res.end();
       return;
     }
@@ -26,11 +32,14 @@ module.exports = async (req, res) => {
     // For static Vercel deployment, acknowledge reservation flow and continue UX.
     // Replace with provider integration (Resend/SMTP/DB) when credentials are available.
     res.statusCode = 302;
-    res.setHeader('Location', '/gracias-reservacion/');
+    res.setHeader('Location', isEnglish ? '/en/gracias-reservacion/' : '/gracias-reservacion/');
     res.end();
   } catch (_err) {
     res.statusCode = 302;
-    res.setHeader('Location', '/reservacion-prueba/?error=submit-failed');
+    res.setHeader(
+      'Location',
+      isEnglish ? '/en/reservacion-prueba/?error=submit-failed' : '/reservacion-prueba/?error=submit-failed'
+    );
     res.end();
   }
 };
