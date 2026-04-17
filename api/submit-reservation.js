@@ -27,6 +27,38 @@ const RESERVATION_RECIPIENTS = [
 
 const SITE_URL = (process.env.TCR_SITE_URL || 'https://tcrcarrental.com').replace(/\/$/, '');
 const WHATSAPP_URL = 'https://wa.me/529987773600';
+const MIN_RENTAL_DAYS = 3;
+const AFTER_HOURS_FEE = 300;
+const LOCATION_FEES = {
+  'Cancún': 0,
+  'Cancún zona hotelera': 400,
+  'Puerto Morelos': 500,
+  'Playa del Carmen': 900,
+  Tulum: 1500,
+  Chetumal: 3800,
+  Mérida: 3400,
+  'Los Cabos San Lucas': 0,
+  'México DF': 0
+};
+const EXTRA_FEES = {
+  baby_seat: { label: 'Silla de bebé', amount: 100 },
+  extra_driver: { label: 'Conductor adicional', amount: 95 }
+};
+const RENTA_INCLUYE = [
+  'Seguro de colisión y robo con deducible del 10%',
+  'Kilometraje libre',
+  'Seguro de responsabilidad civil',
+  'Impuestos federales',
+  'Impuestos aeroportuarios',
+  'Seguro de gastos médicos',
+  'Asistencia legal',
+  'Transporte gratuito de Aeropuerto a oficina y de oficina a Aeropuerto'
+];
+const HIGH_SEASON_RANGES = [
+  { name: 'Semana Santa', start: '04-01', end: '04-15' },
+  { name: 'Verano', start: '07-15', end: '08-10' },
+  { name: 'Diciembre', start: '12-12', end: '01-10' }
+];
 const CAR_CATALOG = loadCarCatalog();
 
 module.exports = async (req, res) => {
@@ -117,7 +149,7 @@ async function sendReservationEmails(reservation) {
   const { transporter, senderUser } = await createWorkingTransporter();
   const fullName = `${reservation.firstName} ${reservation.lastName}`.trim() || 'Cliente sin nombre';
 
-  const adminSubject = `[TCR Rental] CONFIRMACION TCR #${reservation.reservationId} - ${fullName}`;
+  const adminSubject = `[TCR Rental] Detalle TCR #${reservation.reservationId} - ${fullName}`;
   const adminHtml = buildAdminHtmlEmail(reservation);
   const adminText = buildAdminTextEmail(reservation);
 
@@ -130,7 +162,7 @@ async function sendReservationEmails(reservation) {
     html: adminHtml
   });
 
-  const clientSubject = `[TCR Rental] CONFIRMACION TCR #${reservation.reservationId}`;
+  const clientSubject = `[TCR Rental] Detalle TCR #${reservation.reservationId}`;
   const clientHtml = buildClientHtmlEmail(reservation);
   const clientText = buildClientTextEmail(reservation);
 
@@ -174,47 +206,38 @@ async function createWorkingTransporter() {
 
 function buildAdminTextEmail(r) {
   const pricing = buildPricingSummary(r);
+  const fullName = `${r.firstName} ${r.lastName}`.trim() || 'No especificado';
   const lines = [
-    `CONFIRMACION TCR - #${r.reservationId}`,
+    `DETALLE TCR - #${r.reservationId}`,
     `Fecha: ${r.submittedAt}`,
     '',
-    'DATOS DEL CLIENTE',
-    `Nombre: ${`${r.firstName} ${r.lastName}`.trim() || 'No especificado'}`,
-    `Correo: ${r.email || 'No especificado'}`,
+    'DATOS GENERALES',
+    `Reservación: #${r.reservationId}`,
+    `Cliente: ${fullName}`,
+    `Idioma: ${r.formLanguage || 'No especificado'}`,
     `Teléfono: ${r.phone || 'No especificado'}`,
-    '',
-    'DETALLES DE VEHÍCULO',
-    `Auto: ${r.car || 'No especificado'}`,
-    `Pasajeros: ${r.passengers || r.carPassengers || 'No especificado'}`,
-    `Tarifa baja por día: ${r.dailyLow || 'No disponible'}`,
-    `Tarifa alta por día: ${r.dailyHigh || 'No disponible'}`,
-    '',
-    'ITINERARIO',
-    `Entrega: ${r.pickupLocation || 'No especificado'} - ${r.pickupDate || '-'} ${r.pickupTime || ''}`.trim(),
-    `Devolución: ${r.dropoffLocation || 'No especificado'} - ${r.dropoffDate || '-'} ${r.dropoffTime || ''}`.trim(),
-    '',
-    'DATOS ADICIONALES',
-    `Hotel: ${r.hotel || 'No especificado'}`,
-    `Ciudad origen: ${r.originCity || 'No especificado'}`,
+    `Correo: ${r.email || 'No especificado'}`,
     `Aerolínea: ${r.airline || 'No especificado'}`,
     `No. vuelo: ${r.flightNumber || 'No especificado'}`,
+    `Ciudad origen: ${r.originCity || 'No especificado'}`,
     `Conexión: ${r.connection}`,
-    `Extras: ${r.extras.length ? r.extras.join(', ') : 'Ninguno'}`,
+    `Hotel: ${r.hotel || 'No especificado'}`,
+    '',
+    'VEHÍCULO',
+    `Auto: ${r.car || 'No especificado'}`,
+    `No. pasajeros: ${r.passengers || r.carPassengers || 'No especificado'}`,
+    `Entrega: ${r.pickupLocation || 'No especificado'} - ${r.pickupDate || '-'} ${r.pickupTime || ''}`.trim(),
+    `Devolución: ${r.dropoffLocation || 'No especificado'} - ${r.dropoffDate || '-'} ${r.dropoffTime || ''}`.trim(),
+    `Tarifa diaria (${pricing.seasonLabel}): ${formatCurrency(pricing.dailyRate)}`,
+    `Pasajeros: ${r.passengers || r.carPassengers || 'No especificado'}`,
     '',
     'SU RENTA INCLUYE',
-    '- Seguro de colisión y robo con deducible del 10%',
-    '- Kilometraje libre',
-    '- Seguro de responsabilidad civil',
-    '- Impuestos federales',
-    '- Impuestos aeroportuarios',
-    '- Seguro de gastos médicos',
-    '- Asistencia legal',
-    '- Transporte gratuito Aeropuerto <-> Oficina',
+    ...RENTA_INCLUYE.map((item) => `- ${item}`),
     '',
     `Comentarios: ${r.comments || 'Sin comentarios'}`,
     '',
     'CONCEPTO / IMPORTE',
-    pricing.rows.map((row) => `- ${row.label}: ${row.amount}`).join('\n'),
+    ...pricing.rows.map((row) => `- ${row.label}: ${row.amount}`),
     `Total estimado: ${pricing.total}`
   ];
 
@@ -223,15 +246,19 @@ function buildAdminTextEmail(r) {
 
 function buildClientTextEmail(r) {
   const pricing = buildPricingSummary(r);
+  const fullName = `${r.firstName} ${r.lastName}`.trim() || 'Cliente';
   return [
-    `Hola ${`${r.firstName} ${r.lastName}`.trim() || 'Cliente'},`,
+    `Hola ${fullName},`,
     '',
-    'CONFIRMACION TCR',
+    'DETALLE TCR',
     `Folio de reservación: #${r.reservationId}`,
     '',
-    'Recibimos tu solicitud de reservación en TCR Car Rental. En un máximo de 24 horas te enviaremos confirmación final y link de pago.',
+    'Recibimos tu solicitud y este es el detalle registrado. En un máximo de 24 horas te contactaremos con el enlace de pago.',
     '',
+    `Idioma: ${r.formLanguage || 'No especificado'}`,
+    `Teléfono: ${r.phone || 'No especificado'}`,
     `Vehículo: ${r.car || 'No especificado'}`,
+    `Tarifa diaria (${pricing.seasonLabel}): ${formatCurrency(pricing.dailyRate)}`,
     `Entrega: ${r.pickupLocation || '-'} - ${r.pickupDate || '-'} ${r.pickupTime || ''}`.trim(),
     `Devolución: ${r.dropoffLocation || '-'} - ${r.dropoffDate || '-'} ${r.dropoffTime || ''}`.trim(),
     `Pasajeros: ${r.passengers || r.carPassengers || 'No especificado'}`,
@@ -239,8 +266,8 @@ function buildClientTextEmail(r) {
     `Extras: ${r.extras.length ? r.extras.join(', ') : 'Ninguno'}`,
     `Comentarios: ${r.comments || 'Sin comentarios'}`,
     '',
-    'Total estimado:',
-    pricing.total,
+    ...pricing.rows.map((row) => `${row.label}: ${row.amount}`),
+    `Total estimado: ${pricing.total}`,
     '',
     `WhatsApp directo: ${WHATSAPP_URL}`,
     '',
@@ -249,22 +276,22 @@ function buildClientTextEmail(r) {
 }
 
 function buildAdminHtmlEmail(r) {
-  return buildConfirmationHtml(r, false);
+  return buildReservationHtml(r, false);
 }
 
 function buildClientHtmlEmail(r) {
-  return buildConfirmationHtml(r, true);
+  return buildReservationHtml(r, true);
 }
 
-function buildConfirmationHtml(r, forClient) {
+function buildReservationHtml(r, forClient) {
+  const pricing = buildPricingSummary(r);
   const fullName = `${r.firstName} ${r.lastName}`.trim() || 'No especificado';
   const carImageHtml = r.carImage
-    ? `<img src="${escapeHtml(r.carImage)}" alt="${escapeHtml(r.car || 'Vehículo')}" style="display:block;width:100%;max-width:420px;margin:0 auto;border:1px solid #d8e6ff;border-radius:10px;">`
+    ? `<img src="${escapeHtml(r.carImage)}" alt="${escapeHtml(r.car || 'Vehículo')}" style="display:block;width:100%;max-width:360px;height:220px;object-fit:contain;margin:0 auto;border:1px solid #d8e6ff;border-radius:8px;background:#f7fbff;">`
     : `<div style="padding:22px;text-align:center;color:#6a7690;font-size:13px;">Imagen del vehículo no disponible</div>`;
-  const pricing = buildPricingSummary(r);
   const introText = forClient
-    ? `Estimado(a) ${escapeHtml(fullName)}, recibimos su solicitud de reservación. En un periodo máximo de 24 horas nos pondremos en contacto para confirmación y envío de link de pago PayPal.`
-    : `Se recibió una nueva solicitud de reservación desde el formulario web de TCR Car Rental.`;
+    ? `Estimado(a) ${escapeHtml(fullName)}, este correo contiene el detalle completo de su solicitud enviada en TCR Car Rental.`
+    : `Se recibió una nueva solicitud desde el formulario web de TCR Car Rental con el detalle completo.`;
 
   const conceptsHtml = pricing.rows.map((row) => conceptRow(row.label, row.amount)).join('');
   const extrasText = r.extras.length ? r.extras.join(', ') : 'Ninguno';
@@ -277,9 +304,9 @@ function buildConfirmationHtml(r, forClient) {
           <table role="presentation" width="780" cellspacing="0" cellpadding="0" style="width:780px;max-width:780px;background:#ffffff;border:1px solid #c7d9ff;border-radius:10px;overflow:hidden;">
             <tr>
               <td style="padding:20px 24px 10px;">
-                <h1 style="margin:0;color:#0a4abf;font-size:34px;line-height:1.1;font-weight:800;">CONFIRMACION TCR</h1>
+                <h1 style="margin:0;color:#0a4abf;font-size:34px;line-height:1.1;font-weight:800;">DETALLE TCR</h1>
                 <p style="margin:10px 0 4px;color:#2d3f66;font-size:14px;line-height:1.55;">${introText}</p>
-                <p style="margin:0;color:#445679;font-size:13px;line-height:1.55;"><strong>Origen:</strong> TCR Car Rental<br><strong>WhatsApp:</strong> 9987773600<br><strong>Temporada aplicada:</strong> Temporada baja</p>
+                <p style="margin:0;color:#445679;font-size:13px;line-height:1.55;"><strong>Origen:</strong> TCR Car Rental<br><strong>WhatsApp:</strong> 9987773600<br><strong>Temporada aplicada:</strong> ${escapeHtml(pricing.seasonLabel)}</p>
               </td>
             </tr>
             <tr>
@@ -302,7 +329,7 @@ function buildConfirmationHtml(r, forClient) {
                   ${kvRow('Auto', r.car || 'No especificado', 'No. pasajeros', r.passengers || r.carPassengers || 'No especificado')}
                   ${kvRow('Entrega', r.pickupLocation || 'No especificado', 'Fecha / hora', `${r.pickupDate || '-'} ${r.pickupTime || ''}`.trim())}
                   ${kvRow('Devolución', r.dropoffLocation || 'No especificado', 'Fecha / hora', `${r.dropoffDate || '-'} ${r.dropoffTime || ''}`.trim())}
-                  ${kvRow('Tarifa baja / día', r.dailyLow || 'Por confirmar', 'Tarifa alta / día', r.dailyHigh || 'Por confirmar')}
+                  ${kvRow('Tarifa diaria', formatCurrency(pricing.dailyRate), 'Días cobrados', String(pricing.days))}
                 </table>
               </td>
             </tr>
@@ -313,14 +340,7 @@ function buildConfirmationHtml(r, forClient) {
               <td style="padding:12px 24px 4px;">
                 ${sectionTitle('Su Renta Incluye')}
                 <div style="border:1px solid #d8e6ff;border-top:none;padding:12px 14px;color:#1f2d4b;font-size:14px;line-height:1.7;">
-                  • Seguro de colisión y robo con deducible del 10%<br>
-                  • Kilometraje libre<br>
-                  • Seguro de responsabilidad civil<br>
-                  • Impuestos federales<br>
-                  • Impuestos aeroportuarios<br>
-                  • Seguro de gastos médicos<br>
-                  • Asistencia legal<br>
-                  • Transporte gratuito de Aeropuerto a oficina y de oficina a Aeropuerto
+                  ${RENTA_INCLUYE.map((item) => `• ${escapeHtml(item)}`).join('<br>')}
                 </div>
               </td>
             </tr>
@@ -377,32 +397,65 @@ function conceptRow(label, amount) {
 
 function buildPricingSummary(r) {
   const rows = [];
-  const days = calculateDays(r.pickupDate, r.dropoffDate);
-  const lowRate = parseCurrency(r.dailyLow);
+  const seasonInfo = detectSeason(r.pickupDate, r.dropoffDate);
+  const lowRate = Number(r.dailyLow || 0);
+  const highRate = Number(r.dailyHigh || 0);
+  const dailyRate = seasonInfo.season === 'high' ? (highRate > 0 ? highRate : lowRate) : lowRate;
+  const rawDays = calculateDays(r.pickupDate, r.dropoffDate);
+  const days = Math.max(MIN_RENTAL_DAYS, rawDays || 1);
+  const carAmount = dailyRate * days;
 
-  if (days > 0 && lowRate > 0) {
+  rows.push({
+    label: `Auto (${days} día${days > 1 ? 's' : ''} x ${formatCurrency(dailyRate)})`,
+    amount: formatCurrency(carAmount)
+  });
+
+  const pickupFee = LOCATION_FEES[r.pickupLocation] ?? 0;
+  if (pickupFee > 0) {
     rows.push({
-      label: `Auto (${days} día${days > 1 ? 's' : ''} x ${formatCurrency(lowRate)})`,
-      amount: formatCurrency(days * lowRate)
+      label: `Cargo por ciudad (Entrega: ${r.pickupLocation})`,
+      amount: formatCurrency(pickupFee)
     });
-  } else {
-    rows.push({ label: `Auto (${r.car || 'No especificado'})`, amount: 'Por confirmar' });
   }
 
-  rows.push({ label: `Entrega (${r.pickupLocation || 'No especificado'})`, amount: 'Por confirmar' });
-  rows.push({ label: `Devolución (${r.dropoffLocation || 'No especificado'})`, amount: 'Por confirmar' });
+  const dropoffFee = LOCATION_FEES[r.dropoffLocation] ?? 0;
+  if (dropoffFee > 0) {
+    rows.push({
+      label: `Cargo por ciudad (Devolución: ${r.dropoffLocation})`,
+      amount: formatCurrency(dropoffFee)
+    });
+  }
+
+  const afterHoursApplied = isAfterHours(r.pickupTime) || isAfterHours(r.dropoffTime);
+  if (afterHoursApplied) {
+    rows.push({
+      label: 'Cargo fuera de horario (10:00 pm a 5:00 am)',
+      amount: formatCurrency(AFTER_HOURS_FEE)
+    });
+  }
 
   if (r.extras && r.extras.length) {
-    r.extras.forEach((extra) => rows.push({ label: `Extra: ${extra}`, amount: 'Por confirmar' }));
+    r.extras.forEach((extraKey) => {
+      const extra = EXTRA_FEES[extraKey];
+      if (extra) {
+        rows.push({
+          label: extra.label,
+          amount: formatCurrency(extra.amount)
+        });
+      }
+    });
   }
 
-  const knownTotal = rows
-    .map((row) => (row.amount.startsWith('$') ? parseCurrency(row.amount) : 0))
-    .reduce((sum, value) => sum + value, 0);
+  const total = rows.reduce((sum, row) => sum + parseCurrency(row.amount), 0);
 
   return {
     rows,
-    total: knownTotal > 0 ? `${formatCurrency(knownTotal)} MXN` : 'Por confirmar'
+    total: formatCurrency(total),
+    totalRaw: total,
+    season: seasonInfo.season,
+    seasonLabel: seasonInfo.label,
+    dailyRate,
+    days
   };
 }
 
@@ -413,6 +466,44 @@ function calculateDays(startDate, endDate) {
   if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return 0;
   const diff = Math.ceil((e - s) / (1000 * 60 * 60 * 24));
   return diff > 0 ? diff : 0;
+}
+
+function detectSeason(startDate, endDate) {
+  if (!startDate) return { season: 'low', label: 'Temporada baja' };
+
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = endDate ? new Date(`${endDate}T00:00:00`) : new Date(start.getTime() + 86400000);
+  const finalEnd = end > start ? end : new Date(start.getTime() + 86400000);
+
+  const cursor = new Date(start);
+  let guard = 0;
+  while (cursor < finalEnd && guard < 370) {
+    const md = `${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
+    for (const range of HIGH_SEASON_RANGES) {
+      if (isMonthDayInRange(md, range.start, range.end)) {
+        return { season: 'high', label: `Temporada alta — ${range.name}` };
+      }
+    }
+    cursor.setDate(cursor.getDate() + 1);
+    guard += 1;
+  }
+
+  return { season: 'low', label: 'Temporada baja' };
+}
+
+function isMonthDayInRange(md, start, end) {
+  if (start <= end) {
+    return md >= start && md <= end;
+  }
+  return md >= start || md <= end;
+}
+
+function isAfterHours(timeValue) {
+  if (!timeValue || !/^\d{2}:\d{2}$/.test(timeValue)) return false;
+  const [h, m] = timeValue.split(':').map((v) => Number(v));
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return false;
+  const mins = h * 60 + m;
+  return mins >= 22 * 60 || mins <= 5 * 60;
 }
 
 function parseCurrency(value) {
@@ -431,8 +522,42 @@ function formatCurrency(value) {
 }
 
 function loadCarCatalog() {
-  const filePath = path.join(process.cwd(), 'reservacion-prueba', 'index.html');
   const map = new Map();
+  loadCatalogFromPlugin(map);
+  loadCatalogFromReservationHtml(map);
+  return map;
+}
+
+function loadCatalogFromPlugin(map) {
+  const pluginPath = path.join(process.cwd(), '..', 'bakcup-tcr', 'wp-content', 'plugins', 'tcr-reservas', 'tcr-reservas.php');
+  if (!fs.existsSync(pluginPath)) return;
+
+  try {
+    const php = fs.readFileSync(pluginPath, 'utf8');
+    const carRegex = /'([^']+)'\s*=>\s*\[\s*'low'\s*=>\s*([0-9.]+)\s*,\s*'high'\s*=>\s*([0-9.]+)\s*,\s*'image'\s*=>\s*'([^']+)'\s*,\s*'pax'\s*=>\s*([0-9.]+)/g;
+    let match;
+    while ((match = carRegex.exec(php)) !== null) {
+      const name = match[1];
+      const low = Number(match[2] || 0);
+      const high = Number(match[3] || 0);
+      const image = match[4];
+      const pax = match[5];
+      const key = normalizeCarKey(name);
+      if (!key) continue;
+      map.set(key, {
+        image: absoluteImageUrl(image),
+        passengers: pax || '',
+        dailyLow: Number.isFinite(low) ? low : 0,
+        dailyHigh: Number.isFinite(high) ? high : 0
+      });
+    }
+  } catch (err) {
+    console.warn('[TCR] No se pudo cargar catálogo de autos desde plugin:', err && err.message ? err.message : err);
+  }
+}
+
+function loadCatalogFromReservationHtml(map) {
+  const filePath = path.join(process.cwd(), 'reservacion-prueba', 'index.html');
 
   try {
     const html = fs.readFileSync(filePath, 'utf8');
@@ -454,21 +579,19 @@ function loadCarCatalog() {
       map.set(key, {
         image: absoluteImageUrl(image),
         passengers: passengers || '',
-        dailyLow: low ? `$${Number(low).toLocaleString('en-US')}` : '',
-        dailyHigh: high ? `$${Number(high).toLocaleString('en-US')}` : ''
+        dailyLow: Number(low || 0),
+        dailyHigh: Number(high || 0)
       });
     }
   } catch (err) {
     console.warn('[TCR] No se pudo cargar catálogo de autos para email:', err && err.message ? err.message : err);
   }
-
-  return map;
 }
 
 function getCarMeta(carName) {
   const key = normalizeCarKey(carName);
   if (!key || !CAR_CATALOG.size) {
-    return { image: '', passengers: '', dailyLow: '', dailyHigh: '' };
+    return { image: '', passengers: '', dailyLow: 0, dailyHigh: 0 };
   }
 
   const direct = CAR_CATALOG.get(key);
@@ -480,7 +603,7 @@ function getCarMeta(carName) {
     }
   }
 
-  return { image: '', passengers: '', dailyLow: '', dailyHigh: '' };
+  return { image: '', passengers: '', dailyLow: 0, dailyHigh: 0 };
 }
 
 function readAttr(attrText, attrName) {
