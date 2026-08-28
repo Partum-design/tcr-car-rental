@@ -4,7 +4,7 @@
   "description": "Sitio migrado a formato compatible con Vercel:",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test",
     "build:i18n": "node scripts/build-i18n.js"
   },
   "repository": {
@@ -21,6 +21,6 @@
   "homepage": "https://github.com/Partum-design/tcr-car-rental#readme",
   "dependencies": {
     "cheerio": "^1.2.0",
-    "nodemailer": "^8.0.5"
+    "nodemailer": "^9.0.6"
   }
 }

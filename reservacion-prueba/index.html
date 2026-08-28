@@ -661,7 +661,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script><div id="tcr-reserva">
         <form class="tcr-card" method="post" action="/submit-reservation.php">
-            <input type="hidden" name="tcr_res_nonce_field" value="tcr_static_nonce">            <input type="hidden" name="action" value="tcr_submit_reservation">
+            <input type="hidden" name="tcr_form_started_at" value="">
+            <input type="hidden" name="action" value="tcr_submit_reservation">
+            <div aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;">
+                <label for="tcr_website">Website</label>
+                <input id="tcr_website" type="text" name="website" tabindex="-1" autocomplete="off">
+            </div>
 
             <div class="tcr-header">
                 <div class="tcr-chip">TCR Rental</div>
@@ -1005,7 +1010,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <button class="tcr-btn" type="submit">Enviar solicitud</button>
 
                     <p class="tcr-footnote">
-                        Renta mínima: <strong>3 días</strong>.  
+                        Periodo de renta: <strong>3 a 90 días</strong>.
                         El link de pago PayPal se enviará posteriormente (máximo 24 horas).
                         <br>
                         Si no recibe confirmación, revise <strong>Spam</strong> o contáctenos por WhatsApp: <strong>9986941402</strong>
@@ -1399,6 +1404,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         @keyframes tcrFadeUp{ from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
         </style>
+        <script src="/assets/reservation-validation.js" defer></script>
 
         <script>
         (function(){
@@ -1497,8 +1503,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const d1 = new Date(pickup.value + 'T00:00:00');
             const d2 = new Date(dropoff.value + 'T00:00:00');
             let diff = Math.ceil((d2 - d1) / (1000*60*60*24));
-            if(isNaN(diff) || diff < 1) diff = 1;
-            if(diff < MIN_DAYS) diff = MIN_DAYS;
+            if(isNaN(diff) || diff < MIN_DAYS) return null;
             return diff;
           }
 

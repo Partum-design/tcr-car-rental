@@ -28,6 +28,10 @@ const RESERVATION_RECIPIENTS = [
 const SITE_URL = (process.env.TCR_SITE_URL || 'https://tcrcarrental.com').replace(/\/$/, '');
 const WHATSAPP_URL = 'https://wa.me/529987773600';
 const MIN_RENTAL_DAYS = 3;
+const MAX_RENTAL_DAYS = 90;
+const MIN_FORM_TIME_MS = 2500;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+const MAX_SUBMISSIONS_PER_IP = 5;
 const AFTER_HOURS_FEE = 300;
 const LOCATION_FEES = {
   'Cancún': 0,
@@ -60,6 +64,7 @@ const HIGH_SEASON_RANGES = [
   { name: 'Diciembre', start: '12-12', end: '01-10' }
 ];
 const CAR_CATALOG = loadCarCatalog();
+const recentSubmissions = new Map();
 
 module.exports = async (req, res) => {
   const requestUrl = new URL(req.url || '/', 'http://localhost');
@@ -76,13 +81,10 @@ module.exports = async (req, res) => {
     const bodyText = await readBody(req);
     const params = new URLSearchParams(bodyText);
 
-    const email = readParam(params, 'email');
-    const car = readParam(params, 'car');
-    const pickupDate = readParam(params, 'pickup_date');
-    const dropoffDate = readParam(params, 'dropoff_date');
+    validateSubmission(params);
 
-    if (!email || !car || !pickupDate || !dropoffDate) {
-      redirect(res, isEnglish, 'missing-data');
+    if (isRateLimited(req)) {
+      redirect(res, isEnglish, 'too-many-requests');
       return;
     }
 
@@ -93,10 +95,132 @@ module.exports = async (req, res) => {
     res.setHeader('Location', isEnglish ? '/en/gracias-reservacion/' : '/gracias-reservacion/');
     res.end();
   } catch (err) {
+    if (err instanceof ReservationValidationError) {
+      redirect(res, isEnglish, err.code);
+      return;
+    }
     console.error('[TCR] Reservation submit error:', err && err.message ? err.message : err);
     redirect(res, isEnglish, 'submit-failed');
   }
 };
+
+class ReservationValidationError extends Error {
+  constructor(code, message) {
+    super(message);
+    this.name = 'ReservationValidationError';
+    this.code = code;
+  }
+}
+
+function validateSubmission(params, now = new Date()) {
+  if (readParam(params, 'website')) {
+    throw new ReservationValidationError('spam-detected', 'Honeypot field was completed');
+  }
+
+  const startedAt = Number(readParam(params, 'tcr_form_started_at'));
+  if (!Number.isFinite(startedAt) || startedAt > Date.now() + 5000 || Date.now() - startedAt < MIN_FORM_TIME_MS) {
+    throw new ReservationValidationError('spam-detected', 'Form submitted too quickly');
+  }
+
+  const requiredFields = [
+    'language', 'car', 'pickup_location', 'dropoff_location', 'pickup_date', 'pickup_time',
+    'dropoff_date', 'dropoff_time', 'first_name', 'last_name', 'email', 'hotel', 'origin_city', 'passengers'
+  ];
+
+  if (requiredFields.some((field) => !readParam(params, field))) {
+    throw new ReservationValidationError('missing-data', 'Required field is missing');
+  }
+
+  const email = readParam(params, 'email');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email)) {
+    throw new ReservationValidationError('invalid-data', 'Invalid email');
+  }
+
+  if (!['Español', 'English'].includes(readParam(params, 'language'))) {
+    throw new ReservationValidationError('invalid-data', 'Invalid language');
+  }
+
+  const carMeta = getCarMeta(readParam(params, 'car'));
+  if (!carMeta.dailyLow || !carMeta.passengers) {
+    throw new ReservationValidationError('invalid-data', 'Invalid vehicle');
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(LOCATION_FEES, readParam(params, 'pickup_location')) ||
+      !Object.prototype.hasOwnProperty.call(LOCATION_FEES, readParam(params, 'dropoff_location'))) {
+    throw new ReservationValidationError('invalid-data', 'Invalid location');
+  }
+
+  const pickupTime = readParam(params, 'pickup_time');
+  const dropoffTime = readParam(params, 'dropoff_time');
+  if (!isValidTime(pickupTime) || !isValidTime(dropoffTime)) {
+    throw new ReservationValidationError('invalid-data', 'Invalid time');
+  }
+
+  const pickupValue = readParam(params, 'pickup_date');
+  const dropoffValue = readParam(params, 'dropoff_date');
+  const pickupDate = parseDateOnly(pickupValue);
+  const dropoffDate = parseDateOnly(dropoffValue);
+  const today = parseDateOnly(getMexicoDateValue(now));
+  const days = calculateDays(pickupValue, dropoffValue);
+
+  if (!pickupDate || !dropoffDate || !today) {
+    throw new ReservationValidationError('invalid-date', 'Invalid date');
+  }
+  if (pickupDate < today) {
+    throw new ReservationValidationError('invalid-date', 'Pickup date is in the past');
+  }
+  if (!days || days < MIN_RENTAL_DAYS || days > MAX_RENTAL_DAYS) {
+    throw new ReservationValidationError('invalid-date', 'Rental duration is outside the allowed range');
+  }
+
+  const passengers = Number(readParam(params, 'passengers'));
+  if (!Number.isInteger(passengers) || passengers < 1 || passengers > Number(carMeta.passengers)) {
+    throw new ReservationValidationError('invalid-data', 'Invalid passenger count');
+  }
+
+  const extras = params.getAll('extras[]').map((value) => value.trim()).filter(Boolean);
+  if (extras.some((extra) => !Object.prototype.hasOwnProperty.call(EXTRA_FEES, extra)) || new Set(extras).size !== extras.length) {
+    throw new ReservationValidationError('invalid-data', 'Invalid extras');
+  }
+}
+
+function parseDateOnly(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value ? null : date;
+}
+
+function getMexicoDateValue(date) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Mexico_City', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(date).reduce((result, part) => {
+    if (part.type !== 'literal') result[part.type] = part.value;
+    return result;
+  }, {});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function isValidTime(value) {
+  if (!/^\d{2}:\d{2}$/.test(value)) return false;
+  const [hour, minute] = value.split(':').map(Number);
+  return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
+}
+
+function isRateLimited(req, now = Date.now()) {
+  const forwardedFor = req && req.headers && (req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For']);
+  const ip = String(forwardedFor || (req && req.socket && req.socket.remoteAddress) || '').split(',')[0].trim();
+  if (!ip) return false;
+
+  const recent = (recentSubmissions.get(ip) || []).filter((timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS);
+  if (recent.length >= MAX_SUBMISSIONS_PER_IP) {
+    recentSubmissions.set(ip, recent);
+    return true;
+  }
+
+  recent.push(now);
+  recentSubmissions.set(ip, recent);
+  return false;
+}
 
 function redirect(res, isEnglish, errorCode) {
   res.statusCode = 302;
@@ -673,3 +797,12 @@ async function readBody(req) {
     req.on('error', reject);
   });
 }
+
+module.exports._test = {
+  MAX_RENTAL_DAYS,
+  MIN_RENTAL_DAYS,
+  calculateDays,
+  getMexicoDateValue,
+  parseDateOnly,
+  validateSubmission
+};

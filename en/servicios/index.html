@@ -1177,7 +1177,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     <div id="tcr-reserva">
         <form class="tcr-card" method="post" action="/submit-reservation.php?lang=en">
-            <input type="hidden" name="tcr_res_nonce_field" value="tcr_static_nonce">            <input type="hidden" name="action" value="tcr_submit_reservation">
+            <input type="hidden" name="tcr_form_started_at" value="">
+            <input type="hidden" name="action" value="tcr_submit_reservation">
+            <div aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;">
+                <label for="tcr_website">Website</label>
+                <input id="tcr_website" type="text" name="website" tabindex="-1" autocomplete="off">
+            </div>
 
             <div class="tcr-header">
                 <div class="tcr-chip">TCR Rental</div>
@@ -1376,7 +1381,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     <button class="tcr-btn" type="submit">Send application</button>
 
-                    <p class="tcr-footnote">Minimum income<strong>3 days</strong>.  
+                    <p class="tcr-footnote">Rental period:<strong>3 to 90 days</strong>.
                         The PayPal payment link will be sent later (maximum 24 hours).<br>If you do not receive confirmation, please review<strong>Spam</strong>or contact us on WhatsApp:<strong>9986941402</strong>
                     </p>
                 </div>
@@ -1758,6 +1763,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         @keyframes tcrFadeUp{ from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
         </style>
+        <script src="/assets/reservation-validation.js" defer></script>
 
         <script>
         (function(){
@@ -1856,8 +1862,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const d1 = new Date(pickup.value + 'T00:00:00');
             const d2 = new Date(dropoff.value + 'T00:00:00');
             let diff = Math.ceil((d2 - d1) / (1000*60*60*24));
-            if(isNaN(diff) || diff < 1) diff = 1;
-            if(diff < MIN_DAYS) diff = MIN_DAYS;
+            if(isNaN(diff) || diff < MIN_DAYS) return null;
             return diff;
           }
 
